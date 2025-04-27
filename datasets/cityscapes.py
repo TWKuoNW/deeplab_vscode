@@ -121,10 +121,14 @@ class Cityscapes(data.Dataset):
         """
         image = Image.open(self.images[index]).convert('RGB')
         target = Image.open(self.targets[index])
+        img_path = self.files[index] 
+        filename = os.path.splitext(os.path.basename(img_path))[0]
+
         if self.transform:
             image, target = self.transform(image, target)
         target = self.encode_target(target)
-        return image, target
+
+        return image, target, filename
 
     def __len__(self):
         return len(self.images)

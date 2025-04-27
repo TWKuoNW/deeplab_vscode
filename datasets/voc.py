@@ -135,18 +135,16 @@ class VOCSegmentation(data.Dataset):
         assert (len(self.images) == len(self.masks))
 
     def __getitem__(self, index):
-        """
-        Args:
-            index (int): Index
-        Returns:
-            tuple: (image, target) where target is the image segmentation.
-        """
-        img = Image.open(self.images[index]).convert('RGB')
+        image = Image.open(self.images[index]).convert('RGB')
         target = Image.open(self.masks[index])
-        if self.transform is not None:
-            img, target = self.transform(img, target)
 
-        return img, target
+        img_path = self.images[index]
+        filename = os.path.splitext(os.path.basename(img_path))[0]
+
+        if self.transform:
+            image, target = self.transform(image, target)
+
+        return image, target, filename
 
 
     def __len__(self):

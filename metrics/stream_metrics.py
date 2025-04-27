@@ -54,13 +54,17 @@ class StreamSegMetrics(_StreamMetrics):
         ).reshape(self.n_classes, self.n_classes)
         return hist
 
-    def get_results(self):
+    def get_results(self, log_name):
+        from datetime import datetime
+
         """Returns accuracy score evaluation result.
-            - overall accuracy
-            - mean accuracy
-            - mean IU
-            - fwavacc
+            "Mean Acc": mean_acc_cls,
+            "Mean Precision": mean_precision,
+            "Mean Recall": mean_recall,
+            "Mean Fall-out": mean_fallout,
+            "Mean IoU": mean_iu,
         """
+
         self.eval_classes = [0, 1]
         hist = self.confusion_matrix[np.ix_(self.eval_classes, self.eval_classes)]
 
@@ -91,7 +95,7 @@ class StreamSegMetrics(_StreamMetrics):
 
         print("Confusion Matrix:\n", hist)
 
-        return {
+        metrics = {
             # "Overall Acc": acc,
             # "FreqW Acc": fwavacc,
             "Mean Acc": mean_acc_cls,
@@ -100,6 +104,23 @@ class StreamSegMetrics(_StreamMetrics):
             "Mean Fall-out": mean_fallout,
             "Mean IoU": mean_iu,
         }
+        # 取得時間
+        now = datetime.now()
+        time_str = now.strftime("%Y-%m-%d %H:%M:%S")
+        safe_time_str = time_str.replace(":", "_")  # 替換掉冒號
+
+        # 寫入 log
+        with open(log_name, "a") as f:
+            f.write(f"{safe_time_str}\n")
+            for key, value in metrics.items():
+                f.write(f"{key}: {value:.4f}\n")
+            f.write("matrix:\n")
+            f.write(np.array2string(hist, separator=', '))
+            f.write("\n\n")
+
+        print(f"Log saved to {log_name}")
+
+        return metrics
 
         
     def reset(self):

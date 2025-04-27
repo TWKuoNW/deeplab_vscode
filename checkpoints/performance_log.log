@@ -1,0 +1,10 @@
+2025-04-27 22_01_36
+Mean Acc: 0.8644
+Mean Precision: 0.8710
+Mean Recall: 0.8644
+Mean Fall-out: 0.1356
+Mean IoU: 0.7637
+matrix:
+[[10997397.,   998160.],
+ [ 2031988.,  8782055.]]
+

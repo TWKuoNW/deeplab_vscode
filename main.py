@@ -5,6 +5,8 @@ import os
 import random
 import argparse
 import numpy as np
+import datetime
+import cv2
 
 from torch.utils import data
 from datasets import VOCSegmentation, Cityscapes
@@ -93,6 +95,11 @@ def get_argparser():
                         help='env for visdom')
     parser.add_argument("--vis_num_samples", type=int, default=8,
                         help='number of samples for visualization (default: 8)')
+    
+    parser.add_argument("--log_name", type=str, default="performance_log",
+                    help="custom log file name (default: performance_log)")
+
+    
     return parser
 
 
@@ -159,13 +166,12 @@ def validate(opts, model, loader, device, metrics, ret_samples_ids=None):
     ret_samples = []
     if opts.save_val_results:
         if not os.path.exists('results'):
-            os.mkdir('results')
+            os.makedirs('results')
         denorm = utils.Denormalize(mean=[0.485, 0.456, 0.406],
                                    std=[0.229, 0.224, 0.225])
-        img_id = 0
 
     with torch.no_grad():
-        for i, (images, labels) in tqdm(enumerate(loader)):
+        for i, (images, labels, filenames) in tqdm(enumerate(loader)):
 
             images = images.to(device, dtype=torch.float32)
             labels = labels.to(device, dtype=torch.long)
@@ -175,23 +181,37 @@ def validate(opts, model, loader, device, metrics, ret_samples_ids=None):
             targets = labels.cpu().numpy()
 
             metrics.update(targets, preds)
-            if ret_samples_ids is not None and i in ret_samples_ids:  # get vis samples
+            if ret_samples_ids is not None and i in ret_samples_ids:
                 ret_samples.append(
                     (images[0].detach().cpu().numpy(), targets[0], preds[0]))
 
             if opts.save_val_results:
-                for i in range(len(images)):
-                    image = images[i].detach().cpu().numpy()
-                    target = targets[i]
-                    pred = preds[i]
+                # 如果 batch_size=1，讓 filenames 變成 list 方便處理
+                if isinstance(filenames, str):
+                    filenames = [filenames]
+
+                for j in range(len(images)):
+                    image = images[j].detach().cpu().numpy()
+                    target = targets[j]
+                    pred = preds[j]
+
+                    filename = filenames[j]  # 正確對應
 
                     image = (denorm(image) * 255).transpose(1, 2, 0).astype(np.uint8)
                     target = loader.dataset.decode_target(target).astype(np.uint8)
                     pred = loader.dataset.decode_target(pred).astype(np.uint8)
 
-                    Image.fromarray(image).save('results/%d_image.png' % img_id)
-                    Image.fromarray(target).save('results/%d_target.png' % img_id)
-                    Image.fromarray(pred).save('results/%d_pred.png' % img_id)
+                    # ✨ 加在這裡！resize回原圖大小
+                    original_image = Image.open(loader.dataset.images[j]).convert('RGB')
+                    ori_w, ori_h = original_image.size
+
+                    pred = cv2.resize(pred, (ori_w, ori_h), interpolation=cv2.INTER_NEAREST)
+                    target = cv2.resize(target, (ori_w, ori_h), interpolation=cv2.INTER_NEAREST)
+                    image = cv2.resize(image, (ori_w, ori_h), interpolation=cv2.INTER_LINEAR)
+
+                    Image.fromarray(image).save(f'results/{filename}_image.png')
+                    Image.fromarray(target).save(f'results/{filename}_target.png')
+                    Image.fromarray(pred).save(f'results/{filename}_pred.png')
 
                     fig = plt.figure()
                     plt.imshow(image)
@@ -200,11 +220,14 @@ def validate(opts, model, loader, device, metrics, ret_samples_ids=None):
                     ax = plt.gca()
                     ax.xaxis.set_major_locator(matplotlib.ticker.NullLocator())
                     ax.yaxis.set_major_locator(matplotlib.ticker.NullLocator())
-                    plt.savefig('results/%d_overlay.png' % img_id, bbox_inches='tight', pad_inches=0)
+                    plt.savefig(f'results/{filename}_overlay.png', bbox_inches='tight', pad_inches=0)
                     plt.close()
-                    img_id += 1
 
-        score = metrics.get_results()
+        # 儲存 LOG
+        os.makedirs("checkpoints", exist_ok=True)
+        log_name = f"checkpoints/{opts.log_name}.log"
+
+        score = metrics.get_results(log_name)
     return score, ret_samples
 
 
@@ -324,7 +347,7 @@ def main():
         # =====  Train  =====
         model.train()
         cur_epochs += 1
-        for (images, labels) in train_loader:
+        for (images, labels, filenames) in train_loader:
             cur_itrs += 1
 
             images = images.to(device, dtype=torch.float32)

@@ -1,0 +1,40 @@
+2025-04-27 21_51_08
+Mean Acc: 0.6497
+Mean Precision: 0.6581
+Mean Recall: 0.6497
+Mean Fall-out: 0.3503
+Mean IoU: 0.4630
+matrix:
+[[ 813448.,  790355.],
+ [ 268218., 1022838.]]
+
+2025-04-27 21_53_27
+Mean Acc: 0.5054
+Mean Precision: 0.6715
+Mean Recall: 0.5054
+Mean Fall-out: 0.4946
+Mean IoU: 0.2304
+matrix:
+[[  20230., 1583573.],
+ [   2389., 1288667.]]
+
+2025-04-27 21_56_14
+Mean Acc: 0.5001
+Mean Precision: 0.7230
+Mean Recall: 0.5001
+Mean Fall-out: 0.4999
+Mean IoU: 0.2231
+matrix:
+[[2.160000e+02, 1.603587e+06],
+ [0.000000e+00, 1.291056e+06]]
+
+2025-04-27 21_58_53
+Mean Acc: 0.5774
+Mean Precision: 0.6626
+Mean Recall: 0.5774
+Mean Fall-out: 0.4226
+Mean IoU: 0.3375
+matrix:
+[[ 329003., 1274800.],
+ [  65057., 1225999.]]
+

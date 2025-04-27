@@ -11,8 +11,8 @@
 
 第四步:
 開始訓練，訓練命令如下，複製貼到終端機：
-python main.py --model deeplabv3plus_mobilenet --year 2012 --crop_val --lr 0.01 --crop_size 513 --batch_size 10 --output_stride 16 --gpu_id 0 --total_itrs 30000 --val_interval 1500
+python main.py --model deeplabv3plus_mobilenet --year 2012 --crop_val --crop_size 513 --lr 0.01 --batch_size 10 --output_stride 16 --gpu_id 0 --total_itrs 30000 --val_interval 10 --log_name log_1
 
 第五步:
 開始測試
-python main.py --model deeplabv3plus_mobilenet --year 2012 --crop_val --crop_size 513 --batch_size 1 --output_stride 16 --gpu_id 0 --ckpt checkpoints\best_seagrass_ver1.pth --test_only --save_val_results --data_root ./datasets/data --num_classes 2
+python main.py --model deeplabv3plus_mobilenet --year 2012 --batch_size 1 --output_stride 16 --gpu_id 0 --ckpt checkpoints\best_seagrass_ver1.pth --test_only --save_val_results --data_root ./datasets/data --num_classes 2
